@@ -19,6 +19,9 @@ rd_speed = {"droga dojazdowa": 50,
            "autostrada": 140,
            "droga główna ruchu przyspieszonego": 100}
 
+for lyr in [point_lyr, road_lyr]:
+    arcpy.SelectLayerByAttribute_management(lyr,"CLEAR_SELECTION")
+
 graph, edge_dict, vertex_dict = get_verticles_edges(gdb_path, point_lyr, road_lyr, rd_speed)
 
 print(dijkstra(1, 155, graph, edge_dict))
