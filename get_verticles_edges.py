@@ -1,3 +1,5 @@
+import arcpy
+
 def get_verticles_edges(gdb_path, point_lyr, road_lyr, rd_speed): 
     vertex_dict = {} # słownik, gdzie klucz to id wierzchołka, a wartość to współrzędne
     coord_to_id = {} # słownik, gdzie klucz to wspolrzedne, a wartość id wierzchołka
