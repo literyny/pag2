@@ -1,5 +1,5 @@
 from Dijkstra import dijkstra
-from get_verticles_edges import get_verticles_edges
+from get_verticles_edges import get_verticles_edges, read_edge_dict_from_file, prepare_graph
 import arcpy
 """
 main.py
@@ -17,6 +17,7 @@ start_id = arcpy.GetParameter(3)
 end_id = arcpy.GetParameter(4)
 road_symb = arcpy.GetParameterAsText(5)
 vertex_symb = arcpy.GetParameterAsText(6)
+file_path = arcpy.GetParameterAsText(7)
 
 arcpy.env.workspace = gdb_path
 arcpy.env.overwriteOutput = True
@@ -30,16 +31,17 @@ rd_speed = {"droga dojazdowa": 50,
            "droga zbiorcza": 70,
            "droga ekspresowa": 120,
            "autostrada": 140,
-           "droga główna ruchu przyspieszonego": 100}
+           "droga główna ruchu przyśpieszonego": 100}
 
 for lyr in [point_lyr, road_lyr]:
     arcpy.SelectLayerByAttribute_management(lyr,"CLEAR_SELECTION")
-    
-graph, edge_dict, vertex_dict = get_verticles_edges(gdb_path, point_lyr, road_lyr, rd_speed)
-# print(dijkstra(start_id, end_id, graph, edge_dict))
-# print(a_star(start_id, end_id, graph, edge_dict))
-active_map.addDataFromPath(f"{gdb_path}\\{point_lyr}")
+
+
+edge_dict = read_edge_dict_from_file(file_path)
+graph = prepare_graph(edge_dict)
+
 time, total_length, verticles, edges = dijkstra(start_id, end_id, graph, edge_dict)
+
 if verticles and edges:
     print("Czas [min]: ", round(time, 2), "Długość [km]: ", round(total_length, 2))
 

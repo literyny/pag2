@@ -1,6 +1,6 @@
 import arcpy
 
-def get_verticles_edges(gdb_path, point_lyr, road_lyr, rd_speed):
+def get_verticles_edges(gdb_path, point_lyr, road_lyr, rd_speed, active_map):
     """
     Ekstrahuje listę wierzchołków i listę krawędzi z reprezentacji `graph`.
 
@@ -21,7 +21,6 @@ def get_verticles_edges(gdb_path, point_lyr, road_lyr, rd_speed):
     coord_to_id = {} # słownik, gdzie klucz to wspolrzedne, a wartość id wierzchołka
     edge_dict = {} # słownik, gdzie dla id krawędzi jest (id początku, id końca, długość w metrach, czas przejazdu w minutach)
     vertex_id = 0
-    graph = {}
 
     pnts_cls = arcpy.management.CreateFeatureclass(gdb_path, point_lyr, "POINT", spatial_reference = 2180)
     arcpy.management.AddField(pnts_cls, "vertex_id", "LONG")
@@ -44,14 +43,30 @@ def get_verticles_edges(gdb_path, point_lyr, road_lyr, rd_speed):
             rd_time = (geom.length/rd_speed[rd_cls])*6/100 # czas przejechania drogi w minutach
             edge_dict[fid] = (start_id, end_id, geom.length, rd_time)
 
-    del i_cursor
+        del i_cursor
+        active_map.addDataFromPath(f"{gdb_path}\\{point_lyr}")
 
-    for fid, (u, v, length, time) in edge_dict.items():
-        if fid % 10 == 0: # jednokierunkowa tam
+    return edge_dict, vertex_dict
+
+def read_edge_dict_from_file(file_path):
+    edge_dict = {}
+    with open(file_path, "r") as file:
+        for line in file:
+            line_list = line.split(":")
+            edge_id = int(line_list[0])
+            val = line_list[1].split(",")
+            values_tpl = (int(val[0]), int(val[1]), float(val[2]), float(val[3]), val[4].strip())
+            edge_dict[edge_id] = values_tpl
+    return edge_dict
+
+def prepare_graph(edge_dict):
+    graph = {}
+    for fid, (u, v, length, time, dirct) in edge_dict.items():
+        if dirct == "tam": # jednokierunkowa tam
             graph.setdefault(v, []).append((u, fid))
-        elif fid % 10 == 1: # jednokierunkowa spowrotem
+        elif dirct == "spowrotem": # jednokierunkowa spowrotem
             graph.setdefault(u, []).append((v, fid))
         else: # dwukierunkowa
             graph.setdefault(v, []).append((u, fid))
             graph.setdefault(u, []).append((v, fid))
-    return graph, edge_dict, vertex_dict
+    return graph
