@@ -2,6 +2,24 @@ from Priority_queue import Priority
 from utils import get_path
 
 def dijkstra(start_id, end_id, graph, edge_dict):
+    """
+       Implementacja algorytmu Dijkstry — znajdowanie najkrótszych ścieżek
+       od źródła `start` do wszystkich innych wierzchołków w grafie.
+
+       Parameters:
+           graph: struktura reprezentująca graf — najczęściej słownik,
+                  gdzie graph[u] = {v: weight_uv, …} reprezentuje krawędzie u→v z wagą weight_uv.
+           start: wierzchołek początkowy (klucz występujący w graph).
+
+       Returns:
+           tuple:
+               (distances, previous)
+               distances: dict {v: cost} — koszt najtańszej ścieżki ze `start` do v.
+               previous: dict {v: u} — poprzednik v w najkrótszej ścieżce ze `start`.
+
+       Raises:
+           ValueError: jeżeli `start` nie znajduje się w grafie.
+       """
     pq = Priority(lambda x: x[0]) # dodajemy do kolejki kolejnych sąsiadów, jeśli ścieżka się poprawi
     pq.append((0, start_id)) # dodajemy pierwszy wierzchołek (czas, id)
     

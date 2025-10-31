@@ -1,6 +1,22 @@
 import arcpy
 
-def get_verticles_edges(gdb_path, point_lyr, road_lyr, rd_speed): 
+def get_verticles_edges(gdb_path, point_lyr, road_lyr, rd_speed):
+    """
+    Ekstrahuje listę wierzchołków i listę krawędzi z reprezentacji `graph`.
+
+    Parameters:
+        graph: struktura reprezentująca graf – może być słownikiem, listą list, macierzą
+               lub inną strukturą zależnie od implementacji.
+
+    Returns:
+        tuple:
+            (vertices, edges)
+            vertices: lista wszystkich wierzchołków w grafie.
+            edges: lista krotek (u, v, weight) lub odpowiedniej reprezentacji krawędzi.
+
+    Raises:
+        ValueError: jeśli `graph` nie spełnia oczekiwanej struktury lub jest pusta.
+    """
     vertex_dict = {} # słownik, gdzie klucz to id wierzchołka, a wartość to współrzędne
     coord_to_id = {} # słownik, gdzie klucz to wspolrzedne, a wartość id wierzchołka
     edge_dict = {} # słownik, gdzie dla id krawędzi jest (id początku, id końca, długość w metrach, czas przejazdu w minutach)

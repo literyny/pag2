@@ -1,7 +1,15 @@
 from Dijkstra import dijkstra
 from get_verticles_edges import get_verticles_edges
 import arcpy
+"""
+main.py
 
+Punkt wejścia programu. Wykonuje następujące kroki:
+1. Wczytuje graf lub dane wejściowe (np. z pliku lub definicji w kodzie).
+2. Uruchamia wybrany algorytm grafowy (Dijkstra lub A*).
+3. Wyświetla wyniki (ścieżka, koszt, opcjonalnie wizualizacja).
+
+"""
 gdb_path = arcpy.GetParameterAsText(0)
 point_lyr = arcpy.GetParameterAsText(1)
 road_lyr = arcpy.GetParameterAsText(2)
