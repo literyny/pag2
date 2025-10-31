@@ -15,9 +15,7 @@ point_lyr = arcpy.GetParameterAsText(1)
 road_lyr = arcpy.GetParameterAsText(2)
 start_id = arcpy.GetParameter(3)
 end_id = arcpy.GetParameter(4)
-road_symb = arcpy.GetParameterAsText(5)
-vertex_symb = arcpy.GetParameterAsText(6)
-file_path = arcpy.GetParameterAsText(7)
+file_path = arcpy.GetParameterAsText(5)
 
 arcpy.env.workspace = gdb_path
 arcpy.env.overwriteOutput = True
@@ -53,8 +51,5 @@ if verticles and edges:
     
     active_map.addDataFromPath(f"{gdb_path}\\trasa")
     active_map.addDataFromPath(f"{gdb_path}\\wierzchołki")
-    
-    arcpy.management.ApplySymbologyFromLayer("trasa", road_symb)
-    arcpy.management.ApplySymbologyFromLayer("wierzchołki", vertex_symb)
 else:
     print("Brak połączenia")
