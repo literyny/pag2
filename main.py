@@ -1,21 +1,14 @@
 from Dijkstra import dijkstra
+from a_star import a_star, heuristic_time
 from get_verticles_edges import get_verticles_edges, read_edge_dict_from_file, prepare_graph
+from utils import get_nearest_vertex_id
 import arcpy
-"""
-main.py
 
-Punkt wejścia programu. Wykonuje następujące kroki:
-1. Wczytuje graf lub dane wejściowe (np. z pliku lub definicji w kodzie).
-2. Uruchamia wybrany algorytm grafowy (Dijkstra lub A*).
-3. Wyświetla wyniki (ścieżka, koszt, opcjonalnie wizualizacja).
-
-"""
 gdb_path = arcpy.GetParameterAsText(0)
 point_lyr = arcpy.GetParameterAsText(1)
 road_lyr = arcpy.GetParameterAsText(2)
-start_id = arcpy.GetParameter(3)
-end_id = arcpy.GetParameter(4)
-file_path = arcpy.GetParameterAsText(5)
+start_pnt = arcpy.GetParameter(3)
+end_pnt = arcpy.GetParameter(4)
 
 arcpy.env.workspace = gdb_path
 arcpy.env.overwriteOutput = True
@@ -31,14 +24,20 @@ rd_speed = {"droga dojazdowa": 50,
            "autostrada": 140,
            "droga główna ruchu przyśpieszonego": 100}
 
-for lyr in [point_lyr, road_lyr]:
-    arcpy.SelectLayerByAttribute_management(lyr,"CLEAR_SELECTION")
-
-
-edge_dict = read_edge_dict_from_file(file_path)
+edge_dict, vertex_dict = get_verticles_edges(gdb_path, point_lyr, road_lyr, rd_speed, active_map)
 graph = prepare_graph(edge_dict)
 
-time, total_length, verticles, edges = dijkstra(start_id, end_id, graph, edge_dict)
+start_id = get_nearest_vertex_id(start_pnt, point_lyr)
+end_id = get_nearest_vertex_id(end_pnt, point_lyr)
+
+time, total_length, verticles, edges = a_star(
+    start_id=start_id,
+    end_id=end_id,
+    graph=graph,
+    edge_dict=edge_dict,
+    vertex_dict=vertex_dict,
+    heuristic_time=heuristic_time
+)
 
 if verticles and edges:
     print("Czas [min]: ", round(time, 2), "Długość [km]: ", round(total_length, 2))

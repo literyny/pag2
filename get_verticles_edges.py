@@ -1,22 +1,6 @@
 import arcpy
 
 def get_verticles_edges(gdb_path, point_lyr, road_lyr, rd_speed, active_map):
-    """
-    Ekstrahuje listę wierzchołków i listę krawędzi z reprezentacji `graph`.
-
-    Parameters:
-        graph: struktura reprezentująca graf – może być słownikiem, listą list, macierzą
-               lub inną strukturą zależnie od implementacji.
-
-    Returns:
-        tuple:
-            (vertices, edges)
-            vertices: lista wszystkich wierzchołków w grafie.
-            edges: lista krotek (u, v, weight) lub odpowiedniej reprezentacji krawędzi.
-
-    Raises:
-        ValueError: jeśli `graph` nie spełnia oczekiwanej struktury lub jest pusta.
-    """
     vertex_dict = {} # słownik, gdzie klucz to id wierzchołka, a wartość to współrzędne
     coord_to_id = {} # słownik, gdzie klucz to wspolrzedne, a wartość id wierzchołka
     edge_dict = {} # słownik, gdzie dla id krawędzi jest (id początku, id końca, długość w metrach, czas przejazdu w minutach)
@@ -26,8 +10,8 @@ def get_verticles_edges(gdb_path, point_lyr, road_lyr, rd_speed, active_map):
     arcpy.management.AddField(pnts_cls, "vertex_id", "LONG")
     i_cursor = arcpy.da.InsertCursor(pnts_cls, ['SHAPE@XY', "vertex_id"])
 
-    with arcpy.da.SearchCursor(road_lyr, ['OBJECTID', 'SHAPE@', 'KLASA_DROG']) as cursor:
-        for fid, geom, rd_cls in cursor:
+    with arcpy.da.SearchCursor(road_lyr, ['OBJECTID', 'SHAPE@', 'KLASA_DROG', 'direction']) as cursor:
+        for fid, geom, rd_cls, direction in cursor:
             start_coord = (round(geom.firstPoint.X, 2), round(geom.firstPoint.Y, 2))
             end_coord = (round(geom.lastPoint.X, 2), round(geom.lastPoint.Y, 2))
 
@@ -41,7 +25,7 @@ def get_verticles_edges(gdb_path, point_lyr, road_lyr, rd_speed, active_map):
             start_id = coord_to_id[start_coord]
             end_id = coord_to_id[end_coord]
             rd_time = (geom.length/rd_speed[rd_cls])*6/100 # czas przejechania drogi w minutach
-            edge_dict[fid] = (start_id, end_id, geom.length, rd_time)
+            edge_dict[fid] = (start_id, end_id, geom.length, rd_time, direction)
 
         del i_cursor
         active_map.addDataFromPath(f"{gdb_path}\\{point_lyr}")
@@ -64,7 +48,7 @@ def prepare_graph(edge_dict):
     for fid, (u, v, length, time, dirct) in edge_dict.items():
         if dirct == "tam": # jednokierunkowa tam
             graph.setdefault(v, []).append((u, fid))
-        elif dirct == "spowrotem": # jednokierunkowa spowrotem
+        elif dirct == "powrot": # jednokierunkowa spowrotem
             graph.setdefault(u, []).append((v, fid))
         else: # dwukierunkowa
             graph.setdefault(v, []).append((u, fid))

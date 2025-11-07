@@ -1,3 +1,5 @@
+import arcpy
+
 def get_path(end_id, prev, edge_dict):
     """
     Odtwarza ścieżkę od wierzchołka `start` do wierzchołka `goal`
@@ -30,3 +32,18 @@ def get_path(end_id, prev, edge_dict):
     total_length = sum(edge_dict[eid][2] for eid in path_edges)
     return total_length, path_vertices, path_edges
 
+
+def get_nearest_vertex_id(input_point, target_layer):
+    """Zwraca vertex_id najbliższego punktu w warstwie."""
+    temp_fc = arcpy.management.CopyFeatures(
+        input_point,
+        arcpy.CreateScratchName("tmp_point", data_type="FeatureClass", workspace=arcpy.env.scratchGDB)
+    )
+    arcpy.analysis.Near(temp_fc, target_layer)
+    with arcpy.da.SearchCursor(temp_fc, ["NEAR_FID"]) as c:
+        near_fid = next(c)[0]
+    where = f"OBJECTID = {near_fid}"
+    with arcpy.da.SearchCursor(target_layer, ["vertex_id"], where_clause=where) as c:
+        vertex_id = next(c)[0]
+    arcpy.management.Delete(temp_fc)
+    return vertex_id

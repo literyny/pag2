@@ -8,7 +8,7 @@ def heuristic_time(node, goal, vertex_dict):
     dist = math.sqrt((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1))
     return (dist/140) * 6/100
 
-def a_star(start_id, end_id, graph, edge_dict, heuristic_time=heuristic_time):
+def a_star(start_id, end_id, graph, edge_dict, vertex_dict, heuristic_time=heuristic_time):
     """
         Implementacja algorytmu A* — znajdowanie najkrótszej ścieżki
         od wierzchołka `start` do `goal` w grafie, z wykorzystaniem heurystyki.
@@ -27,7 +27,7 @@ def a_star(start_id, end_id, graph, edge_dict, heuristic_time=heuristic_time):
             ValueError: jeżeli `start` lub `goal` nie znajdują się w grafie.
         """
     pq = Priority(lambda x: x[0])
-    pq.append((heuristic_time(start_id, end_id), start_id))
+    pq.append((heuristic_time(start_id, end_id, vertex_dict), start_id))
 
     visited = set()
     cost = {start_id: 0}
@@ -53,7 +53,7 @@ def a_star(start_id, end_id, graph, edge_dict, heuristic_time=heuristic_time):
             if v not in cost or new_cost < cost[v]:
                 cost[v] = new_cost
                 prev[v] = (u, eid)
-                h_new = heuristic_time(v, end_id)
+                h_new = heuristic_time(v, end_id, vertex_dict)
                 f_cost = new_cost + h_new
                 pq.append((f_cost, v))
 
