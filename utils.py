@@ -2,21 +2,17 @@ import arcpy
 
 def get_path(end_id, prev, edge_dict):
     """
-    Odtwarza ścieżkę od wierzchołka `start` do wierzchołka `goal`
-    korzystając z mapowania `came_from`, jakie powstało w trakcie algorytmu przeszukiwania.
+    Rekonstruuje najkrótszą ścieżkę od startu do end_id na podstawie słownika prev.
 
-    Parameters:
-        came_from: dict zawierający dla każdego wierzchołka v klucz „poprzednik” w ścieżce
-                   (came_from[v] = u ⇒ ścierzka prowadzi przez u do v).
-        start: wierzchołek początkowy.
-        goal: wierzchołek docelowy.
+    Args:
+        end_id (int): identyfikator węzła końcowego.
+        prev (dict): mapa poprzedników {node: (prev_node, edge_id)}.
+        edge_dict (dict): mapa krawędzi {edge_id: (u, v, length, time, direction)}
 
     Returns:
-        list: lista wierzchołków od `start` do `goal` włącznie,
-              jeżeli istnieje ścieżka. Jeśli nie istnieje, może zwrócić pustą listę lub None.
-
-    Raises:
-        KeyError: jeśli `goal` nie występuje w `came_from` i nie jest równo startowi.
+        total_length (float): długość trasy w metrach
+        path_vertices (list): lista id wierzchołków na ścieżce
+        path_edges (list): lista id krawędzi na ścieżce
     """
     path_vertices = [end_id]
     path_edges = []
@@ -30,20 +26,46 @@ def get_path(end_id, prev, edge_dict):
     path_edges.reverse()
 
     total_length = sum(edge_dict[eid][2] for eid in path_edges)
+    
     return total_length, path_vertices, path_edges
 
 
 def get_nearest_vertex_id(input_point, target_layer):
-    """Zwraca vertex_id najbliższego punktu w warstwie."""
-    temp_fc = arcpy.management.CopyFeatures(
-        input_point,
-        arcpy.CreateScratchName("tmp_point", data_type="FeatureClass", workspace=arcpy.env.scratchGDB)
-    )
-    arcpy.analysis.Near(temp_fc, target_layer)
-    with arcpy.da.SearchCursor(temp_fc, ["NEAR_FID"]) as c:
-        near_fid = next(c)[0]
-    where = f"OBJECTID = {near_fid}"
-    with arcpy.da.SearchCursor(target_layer, ["vertex_id"], where_clause=where) as c:
-        vertex_id = next(c)[0]
-    arcpy.management.Delete(temp_fc)
-    return vertex_id
+    """
+    Znajduje wartość atrybutu vertex_id najbliższego wierzchołka 
+    na warstwie target_layer względem podanego punktu (input_point). 
+    Punkt musi leżeć w promieniu 1 km od najbliższego punktu na warstwie
+
+    Args:
+        input_point (PointGeometry): punkt wejściowy
+        target_layer (str): nazwa lub ścieżka do warstwy wierzchołków
+
+    Returns:
+        int: vertex_id najbliższego wierzchołka
+    """
+    arcpy.analysis.Near(input_point, target_layer, "1000 METERS")
+    with arcpy.da.SearchCursor(input_point, ["NEAR_FID"]) as cursor:
+        near_fid = next(cursor)[0]
+    if near_fid !=-1:
+        where = f"OBJECTID = {near_fid}"
+        with arcpy.da.SearchCursor(target_layer, ["vertex_id"], where_clause=where) as cursor:
+            vertex_id = next(cursor)[0]
+        return vertex_id
+    else:
+        return None
+    
+def format_time(minutes):
+    """Zwraca czas w formacie H M S na podstawie liczby minut."""
+    total_seconds = int(minutes * 60)
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+    seconds = total_seconds % 60
+
+    parts = []
+    if hours > 0:
+        parts.append(f"{hours} h")
+    if minutes > 0 or hours > 0:
+        parts.append(f"{minutes} min")
+    parts.append(f"{seconds} s")
+
+    return " ".join(parts)

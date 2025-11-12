@@ -9,23 +9,6 @@ def heuristic_time(node, goal, vertex_dict):
     return (dist/140) * 6/100
 
 def a_star(start_id, end_id, graph, edge_dict, vertex_dict, heuristic_time=heuristic_time):
-    """
-        Implementacja algorytmu A* — znajdowanie najkrótszej ścieżki
-        od wierzchołka `start` do `goal` w grafie, z wykorzystaniem heurystyki.
-
-        Parameters:
-            graph: struktura reprezentująca graf — np. słownik graph[u] = {v: weight_uv, …}.
-            start: wierzchołek początkowy.
-            goal: wierzchołek docelowy.
-            heuristic: funkcja h(u, goal) → estymowany koszt z u do goal (float/int).
-
-        Returns:
-            list: ścieżka [start, …, goal] reprezentowana jako lista wierzchołków,
-                  jeśli ścieżka istnieje; w przeciwnym razie None lub [].
-
-        Raises:
-            ValueError: jeżeli `start` lub `goal` nie znajdują się w grafie.
-        """
     pq = Priority(lambda x: x[0])
     pq.append((heuristic_time(start_id, end_id, vertex_dict), start_id))
 
@@ -58,7 +41,7 @@ def a_star(start_id, end_id, graph, edge_dict, vertex_dict, heuristic_time=heuri
                 pq.append((f_cost, v))
 
     if end_id not in cost:
-        return float('inf'), 0, [], []            
-    print("Liczba sprawdzanych sąsiadów: ", neighbors_checked, "\nLiczba różnych przejrzanych wierzchołków: ", len(visited))
+        return float('inf'), 0, [], []
+
     total_length, path_vertices, path_edges = get_path(end_id, prev, edge_dict)
-    return cost[end_id], total_length, path_vertices, path_edges
+    return cost[end_id], total_length, path_vertices, path_edges, neighbors_checked, len(visited)

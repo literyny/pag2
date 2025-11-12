@@ -1,6 +1,24 @@
 import arcpy
 
 def get_verticles_edges(gdb_path, point_lyr, road_lyr, rd_speed, active_map):
+    """
+    Tworzy warstwę wierzchołków na podstawie końców każdej polilinii na warstwie road_lyr
+    oraz buduje słownik krawędzi grafu (edge_dict) i wierzchołków grafu (vertex_dict).
+    W słowniku krawędzi grafu przechowywane jest id punktu początkowego i końcowego krawędzi, 
+    długość drogi w metrach, czas przejazdu drogi w minutach (obliczany na podstawie dopuszczalnej 
+    prędkości dla każdej drogi) i kierunkowość drogi.
+
+    Args:
+        gdb_path (str): ścieżka do geobazy
+        point_lyr (str): nazwa warstwy wynikowej wierzchołków
+        road_lyr (str): warstwa wejściowa dróg
+        rd_speed (dict): mapa prędkości dla klas dróg {klasa: km/h}
+        active_map (ArcGIS Map): aktywna mapa do dodania warstwy outputowej
+
+    Returns:
+        edge_dict (dict): {edge_id: (start_id, end_id, length_m, time_min, direction)}
+        vertex_dict (dict): {vertex_id: (x, y)}
+    """
     vertex_dict = {} # słownik, gdzie klucz to id wierzchołka, a wartość to współrzędne
     coord_to_id = {} # słownik, gdzie klucz to wspolrzedne, a wartość id wierzchołka
     edge_dict = {} # słownik, gdzie dla id krawędzi jest (id początku, id końca, długość w metrach, czas przejazdu w minutach)
