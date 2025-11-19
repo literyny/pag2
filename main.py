@@ -1,7 +1,7 @@
 from Dijkstra import dijkstra
 from a_star import a_star, heuristic_time
 from get_verticles_edges import get_verticles_edges, prepare_graph
-from utils import get_nearest_vertex_id, format_time
+from utils import get_nearest_vertex_id, format_time, read_forbidden
 import arcpy
 
 gdb_path = arcpy.GetParameterAsText(0)
@@ -11,7 +11,8 @@ end_pnt = arcpy.GetParameter(3)
 algorithm = arcpy.GetParameterAsText(4)
 out_best_path_lyr = arcpy.GetParameter(5)
 out_verticles_lyr = arcpy.GetParameter(6)
-
+file = arcpy.GetParameterAsText(7)
+ 
 arcpy.env.workspace = gdb_path
 arcpy.env.overwriteOutput = True
 
@@ -31,6 +32,8 @@ new_verticles_lyr = "punkty"
 edge_dict, vertex_dict = get_verticles_edges(gdb_path, new_verticles_lyr, road_lyr, rd_speed, active_map)
 graph = prepare_graph(edge_dict)
 
+forbidden_seq = read_forbidden(file, edge_dict)
+
 start_id = get_nearest_vertex_id(start_pnt, new_verticles_lyr)
 end_id = get_nearest_vertex_id(end_pnt, new_verticles_lyr)
 
@@ -42,6 +45,7 @@ if start_id and end_id:
             graph=graph,
             edge_dict=edge_dict,
             vertex_dict=vertex_dict,
+            forbidden_sequences = forbidden_seq,
             heuristic_time=heuristic_time
         )
     elif algorithm == "Dijkstra":
@@ -49,8 +53,10 @@ if start_id and end_id:
             start_id=start_id,
             end_id=end_id,
             graph=graph,
-            edge_dict=edge_dict
+            edge_dict=edge_dict,
+            forbidden_sequences = forbidden_seq
         )
+
     if time and total_length and verticles and edges:
         edges_expr = f"OBJECTID IN {tuple(edges)}"
         vrtcls_expr = f"vertex_id IN {tuple(verticles)}"
