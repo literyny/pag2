@@ -1,7 +1,7 @@
 from Priority_queue import Priority
-from utils import get_path
+from utils import get_path, is_forbidden
 
-def dijkstra(start_id, end_id, graph, edge_dict):
+def dijkstra(start_id, end_id, graph, edge_dict, forbidden_sequences):
     pq = Priority(lambda x: x[0]) # dodajemy do kolejki kolejnych sąsiadów, jeśli ścieżka się poprawi
     pq.append((0, start_id)) # dodajemy pierwszy wierzchołek (czas, id)
     
@@ -23,6 +23,8 @@ def dijkstra(start_id, end_id, graph, edge_dict):
             neighbors_checked += 1
             edge_time = edge_dict[eid][3]
             new_cost = cost + edge_time
+            if is_forbidden(prev, u, v, forbidden_sequences): # Sprawdzamy zakaznne sekwencje
+                continue
 
             if v not in dist or new_cost < dist[v]: # jeśli nie mamy długości trasy do wierzchołka, albo znaleźliśmy krótszą trasę
                 dist[v] = new_cost # dodajemy najkrótszą ścieżkę od start_id do wierzchołka

@@ -69,3 +69,39 @@ def format_time(minutes):
     parts.append(f"{seconds} s")
 
     return " ".join(parts)
+
+def is_forbidden(prev, u, v, forbidden_sequences):
+    """
+    prev – słownik poprzedników: child -> (parent, edge)
+    u – aktualny węzeł
+    v – proponowany następny węzeł
+    forbidden_sequences – lista sekwencji zakazanych (listy int)
+    """
+
+    for seq in forbidden_sequences:
+        k = len(seq)
+
+        # Ostatni element w sekwencji musi się zgadzać
+        if seq[-1] != v:
+            continue
+
+        # Odtwarzamy końcówkę ścieżki o długości k
+        suffix = get_suffix(prev, u, k - 1) + [v]
+
+        # Jeśli końcówka ścieżki równa zakazowi blokujemy
+        if suffix == seq:
+            return True
+
+    return False
+
+def get_suffix(prev, last_node, length):
+    seq = [last_node]
+    curr = last_node
+
+    for _ in range(length - 1):
+        if curr not in prev:
+            break
+        curr, _ = prev[curr]
+        seq.append(curr)
+
+    return seq[::-1]

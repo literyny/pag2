@@ -1,6 +1,6 @@
 import math
 from Priority_queue import Priority
-from utils import get_path
+from utils import get_path, is_forbidden
 
 def heuristic_time(node, goal, vertex_dict):
     x1, y1 = vertex_dict[node]
@@ -8,7 +8,7 @@ def heuristic_time(node, goal, vertex_dict):
     dist = math.sqrt((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1))
     return (dist/140) * 6/100
 
-def a_star(start_id, end_id, graph, edge_dict, vertex_dict, heuristic_time=heuristic_time):
+def a_star(start_id, end_id, graph, edge_dict, vertex_dict, forbidden_sequences, heuristic_time=heuristic_time):
     pq = Priority(lambda x: x[0])
     pq.append((heuristic_time(start_id, end_id, vertex_dict), start_id))
 
@@ -32,6 +32,9 @@ def a_star(start_id, end_id, graph, edge_dict, vertex_dict, heuristic_time=heuri
             neighbors_checked += 1
             edge_time = edge_dict[eid][3]
             new_cost = g_u + edge_time
+
+            if is_forbidden(prev, u, v, forbidden_sequences):
+                continue
 
             if v not in cost or new_cost < cost[v]:
                 cost[v] = new_cost
