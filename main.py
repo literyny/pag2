@@ -63,8 +63,8 @@ if start_id and end_id:
         
         arcpy.conversion.ExportFeatures(road_lyr, out_best_path_lyr, edges_expr)
         arcpy.conversion.ExportFeatures(new_verticles_lyr, out_verticles_lyr, vrtcls_expr)
-        arcpy.SetParameterAsText(7, format_time(time))
-        arcpy.SetParameterAsText(8, f"{total_length/1000:.3f} km")
+        arcpy.SetParameterAsText(8, format_time(time))
+        arcpy.SetParameterAsText(9, f"{total_length/1000:.3f} km")
 
         arcpy.AddMessage(f"""
 === DZIAŁANIE ALGORYTMU ===

@@ -129,6 +129,7 @@ def read_forbidden(file, edge_dict):
                     break
 
                 u, v = edge[:2]
+                
 
                 if prev_edge is None: # pierwsza iteracja
                     prev_edge = (u, v)
