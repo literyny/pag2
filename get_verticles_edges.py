@@ -64,11 +64,11 @@ def read_edge_dict_from_file(file_path):
 def prepare_graph(edge_dict):
     graph = {}
     for fid, (u, v, length, time, dirct) in edge_dict.items():
-        if dirct == "tam": # jednokierunkowa tam
+        if dirct == "tam":
             graph.setdefault(v, []).append((u, fid))
-        elif dirct == "powrot": # jednokierunkowa spowrotem
+        elif dirct == "powrot":
             graph.setdefault(u, []).append((v, fid))
-        else: # dwukierunkowa
+        else:
             graph.setdefault(v, []).append((u, fid))
             graph.setdefault(u, []).append((v, fid))
     return graph
