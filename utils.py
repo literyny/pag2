@@ -105,3 +105,66 @@ def get_suffix(prev, last_node, length):
         seq.append(curr)
 
     return seq[::-1]
+
+
+def read_forbidden(file, edge_dict):
+    """Funkcja czyta id odcinków z pliku i tworzy sekwencje zakazanych wierzchołków."""
+    all_sequences = []
+
+    with open(file, "r") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+
+            vertexes = []
+            prev_edge = None
+            oriented = False # czy ustaliliśmy już orientację sekwencji - tzn czy przeszlismy 2 pierwsze iteracje
+            skip_line = False # jesli dane będą nie poprawne to będziemy pomijać linię
+
+            for el in line.split():
+                edge = edge_dict[int(el)]
+                if edge is None:
+                    skip_line = True
+                    break
+
+                u, v = edge[:2]
+
+                if prev_edge is None: # pierwsza iteracja
+                    prev_edge = (u, v)
+                    continue
+
+                if not oriented: # druga iteracja
+                    pu, pv = prev_edge
+
+                    common = {pu, pv} & {u, v} # powtarzający się wierzchołek w dwóch krawędziach
+                    if not common:
+                        skip_line = True
+                        break
+
+                    mid = common.pop()
+                    first = pu if pv == mid else pv # niepowtarzający się wierzchołek poprzednika jest pierwszym wierzchołkiem sekwencji
+                    last = u if v == mid else v # niepowtarzający się wierzchołek aktualnego jest ostatnim wierzchołkiem sekwencji
+
+                    vertexes = [first, mid, last]
+                    oriented = True
+
+                else: # pozostałe iteracje
+                    seq_last = vertexes[-1]
+
+                    if u == seq_last:
+                        new_vertex = v
+                    elif v == seq_last:
+                        new_vertex = u
+                    else:
+                        skip_line = True
+                        break
+
+                    vertexes.append(new_vertex)
+
+                prev_edge = (u, v)
+
+            if not skip_line and vertexes:
+                all_sequences.append(vertexes)
+
+    return all_sequences
