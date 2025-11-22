@@ -1,75 +1,76 @@
-from Dijkstra import dijkstra
-from a_star import a_star, heuristic_time
-from get_verticles_edges import get_verticles_edges, prepare_graph
-from utils import get_nearest_vertex_id, format_time, read_forbidden
 import arcpy
+from graph_builder import build_graph
+from forbidden_sequence import ForbiddenSequences
+from utils import format_time, get_nearest_vertex_id
+from algorithm import Algorithm
 
 gdb_path = arcpy.GetParameterAsText(0)
 road_lyr = arcpy.GetParameterAsText(1)
 start_pnt = arcpy.GetParameter(2)
 end_pnt = arcpy.GetParameter(3)
-algorithm = arcpy.GetParameterAsText(4)
+algorithm_name = arcpy.GetParameterAsText(4)
 out_best_path_lyr = arcpy.GetParameter(5)
 out_verticles_lyr = arcpy.GetParameter(6)
-file = arcpy.GetParameterAsText(7)
- 
+forbidden_file = arcpy.GetParameterAsText(7)
+
 arcpy.env.workspace = gdb_path
 arcpy.env.overwriteOutput = True
 
 active_map = arcpy.mp.ArcGISProject("current").activeMap
 
-rd_speed = {"droga dojazdowa": 50,
-           "droga główna": 90,
-           "droga lokalna": 60,
-           "droga wewnętrzna": 30,
-           "droga zbiorcza": 70,
-           "droga ekspresowa": 120,
-           "autostrada": 140,
-           "droga główna ruchu przyśpieszonego": 100}
+rd_speed = {
+    "droga dojazdowa": 50,
+    "droga główna": 90,
+    "droga lokalna": 60,
+    "droga wewnętrzna": 30,
+    "droga zbiorcza": 70,
+    "droga ekspresowa": 120,
+    "autostrada": 140,
+    "droga główna ruchu przyśpieszonego": 100
+}
 
-new_verticles_lyr = "punkty"
+graph, point_layer_name = build_graph(
+    point_lyr="punkty",
+    road_lyr=road_lyr,
+    rd_speed=rd_speed,
+    gdb_path = gdb_path,
+    active_map = active_map
+)
 
-edge_dict, vertex_dict = get_verticles_edges(gdb_path, new_verticles_lyr, road_lyr, rd_speed, active_map)
-graph = prepare_graph(edge_dict)
+forbidden = ForbiddenSequences.from_file(forbidden_file, graph)
 
-forbidden_seq = read_forbidden(file, edge_dict)
+start_id = get_nearest_vertex_id(start_pnt, point_layer_name)
+end_id = get_nearest_vertex_id(end_pnt, point_layer_name)
 
-start_id = get_nearest_vertex_id(start_pnt, new_verticles_lyr)
-end_id = get_nearest_vertex_id(end_pnt, new_verticles_lyr)
+if start_id is None or end_id is None:
+    arcpy.AddMessage("Nie można znaleźć punktu startowego lub końcowego.")
+    raise SystemExit
 
-if start_id and end_id:
-    if algorithm == "A*":
-        time, total_length, verticles, edges, neighbors_checked, visited_cnt = a_star(
-            start_id=start_id,
-            end_id=end_id,
-            graph=graph,
-            edge_dict=edge_dict,
-            vertex_dict=vertex_dict,
-            forbidden_sequences = forbidden_seq,
-            heuristic_time=heuristic_time
-        )
-    elif algorithm == "Dijkstra":
-        time, total_length, verticles, edges, neighbors_checked, visited_cnt = dijkstra(
-            start_id=start_id,
-            end_id=end_id,
-            graph=graph,
-            edge_dict=edge_dict,
-            forbidden_sequences = forbidden_seq
-        )
+algorithm = Algorithm(graph, forbidden)
+if algorithm_name == "Dijkstra":
+    result = algorithm.solve_dijkstra(start_id, end_id)
 
-    if time and total_length and verticles and edges:
-        edges_expr = f"OBJECTID IN {tuple(edges)}"
-        vrtcls_expr = f"vertex_id IN {tuple(verticles)}"
-        
-        arcpy.conversion.ExportFeatures(road_lyr, out_best_path_lyr, edges_expr)
-        arcpy.conversion.ExportFeatures(new_verticles_lyr, out_verticles_lyr, vrtcls_expr)
-        arcpy.SetParameterAsText(8, format_time(time))
-        arcpy.SetParameterAsText(9, f"{total_length/1000:.3f} km")
+else:
+    result = algorithm.solve_a_star(start_id, end_id)
 
-        arcpy.AddMessage(f"""
-=== DZIAŁANIE ALGORYTMU ===
-Liczba sprawdzanych sąsiadów: {neighbors_checked}
-Liczba różnych przejrzanych wierzchołków: {visited_cnt}
-=============================
+if result is None:
+    arcpy.AddMessage("Nie znaleziono żadnej ścieżki.")
+    raise SystemExit
+
+time, total_length, vertices, edges, neighbors_checked, visited_cnt = result
+
+edges_expr = f"OBJECTID IN {tuple(edges)}"
+verts_expr = f"vertex_id IN {tuple(vertices)}"
+
+arcpy.conversion.ExportFeatures(road_lyr, out_best_path_lyr, edges_expr)
+arcpy.conversion.ExportFeatures(point_layer_name, out_verticles_lyr, verts_expr)
+
+arcpy.SetParameterAsText(8, format_time(time))
+arcpy.SetParameterAsText(9, f"{total_length/1000:.3f} km")
+
+arcpy.AddMessage(f"""
+=== Działanie algorytmu {algorithm_name} ===
+Liczba odwiedzonych wierzchołków: {visited_cnt}
+Liczba sprawdzonych sąsiadów: {neighbors_checked}
+=======================================
 """)
-        

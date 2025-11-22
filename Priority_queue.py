@@ -1,6 +1,10 @@
 import bisect
 
 class Priority:
+    """
+    Inspired by NetworkX priority queue patterns:
+    https://networkx.org/documentation/networkx-0.37/networkx.queues.Priority-class.html
+    """
     def __init__(self, f=lambda x: x):
         self.L = []
         self.f = f
