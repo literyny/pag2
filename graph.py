@@ -18,12 +18,12 @@ class Graph:
         dirct = edge.direction
 
         if dirct == "tam":
-            self.adj.setdefault(v, []).append((u, edge))
+            self.adj[v].append((u, edge))
         elif dirct == "powrot":
-            self.adj.setdefault(u, []).append((v, edge))
+            self.adj[u].append((v, edge))
         else:
-            self.adj.setdefault(v, []).append((u, edge))
-            self.adj.setdefault(u, []).append((v, edge))
+            self.adj[v].append((u, edge))
+            self.adj[u].append((v, edge))
 
     def neighbors(self, node_id):
         return self.adj.get(node_id, [])

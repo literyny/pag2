@@ -59,11 +59,14 @@ if result is None:
 
 time, total_length, vertices, edges, neighbors_checked, visited_cnt = result
 
-edges_expr = f"OBJECTID IN {tuple(edges)}"
-verts_expr = f"vertex_id IN {tuple(vertices)}"
+# te zapytania w ArcGIS przyjmują kolejne id wewnątrz nawiasów okrągłych - konwersja na tuple nie działa dla jednego elementu, bo ArcGIS nie rozumie postaci (2,)
+edges_expr = f"OBJECTID IN ({str(edges)[1:-1]})"
+verts_expr = f"vertex_id IN ({str(vertices)[1:-1]})"
 
-arcpy.conversion.ExportFeatures(road_lyr, out_best_path_lyr, edges_expr)
-arcpy.conversion.ExportFeatures(point_layer_name, out_verticles_lyr, verts_expr)
+if len(edges) > 0:
+    arcpy.conversion.ExportFeatures(road_lyr, out_best_path_lyr, edges_expr)
+if len(vertices) > 0:
+    arcpy.conversion.ExportFeatures(point_layer_name, out_verticles_lyr, verts_expr)
 
 arcpy.SetParameterAsText(8, format_time(time))
 arcpy.SetParameterAsText(9, f"{total_length/1000:.3f} km")
