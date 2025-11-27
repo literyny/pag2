@@ -1,3 +1,5 @@
+from utils import orient_sequence
+
 class ForbiddenSequences:
     def __init__(self, sequences):
         self.sequences = sequences
@@ -26,67 +28,53 @@ class ForbiddenSequences:
             seq.append(curr)
 
         return seq[::-1]
-    
+
+
     @classmethod
     def from_file(cls, file_path, graph):
         all_sequences = []
+        f = open(file_path, "r")
 
-        with open(file_path, "r") as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
 
-                vertexes = []
-                prev_edge = None
-                oriented = False
-                skip_line = False
+            edge_ids = line.split()
+            if len(edge_ids) < 2:
+                continue
 
-                for el in line.split():
-                    edge_id = int(el)
+            edges = []
+            skip_line = False
+            for el in edge_ids:
+                edge_id = int(el)
+                if edge_id not in graph.edges:
+                    skip_line = True
+                    break
+                e = graph.edges[edge_id]
+                edges.append((e.start.id, e.end.id))
 
-                    if edge_id not in graph.edges:
-                        skip_line = True
-                        break
-                    
-                    edge = graph.edges[edge_id]
-                    u = edge.start.id
-                    v = edge.end.id
+            if skip_line:
+                continue
 
-                    if prev_edge is None:
-                        prev_edge = (u, v)
-                        continue
+            oriented_vertices = orient_sequence(edges[0], edges[1])
+            if oriented_vertices is None:
+                continue
 
-                    if not oriented:
-                        pu, pv = prev_edge
-                        common = {pu, pv} & {u, v}
+            for (u, v) in edges[2:]:
+                seq_last = oriented_vertices[-1]
+                if u == seq_last:
+                    new_vertex = v
+                elif v == seq_last:
+                    new_vertex = u
+                else:
+                    skip_line = True
+                    break
 
-                        if not common:
-                            skip_line = True
-                            break
+                oriented_vertices.append(new_vertex)
 
-                        mid = common.pop()
-                        first = pu if pv == mid else pv
-                        last = u if v == mid else v
+            if not skip_line:
+                all_sequences.append(oriented_vertices)
 
-                        vertexes = [first, mid, last]
-                        oriented = True
-
-                    else:
-                        seq_last = vertexes[-1]
-                        if u == seq_last:
-                            new_vertex = v
-                        elif v == seq_last:
-                            new_vertex = u
-                        else:
-                            skip_line = True
-                            break
-
-                        vertexes.append(new_vertex)
-
-                    prev_edge = (u, v)
-
-                if not skip_line and vertexes:
-                    all_sequences.append(vertexes)
-
+        f.close()
         return cls(all_sequences)

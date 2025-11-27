@@ -7,7 +7,7 @@ class Algorithm:
         self.forbidden = forbidden_sequences
     
     def solve_dijkstra(self, start_id, end_id):
-        pq = Priority(lambda x: x[0])
+        pq = Priority(lambda x: x[0]) # kolejka priorytetowa sortuje po czasie
         pq.append((0, start_id))
 
         visited = set()
@@ -16,31 +16,31 @@ class Algorithm:
         neighbors_checked = 0
         
         while len(pq) > 0:
-            cost, u = pq.smallest()
+            cost, u = pq.smallest() # bierzemy wierzcholek o najniższym koszcie + koszt
 
-            if u in visited:
+            if u in visited: # usuwamy duplikaty
                 continue
             visited.add(u)
 
-            if u == end_id:
+            if u == end_id: # jesli znalezlismy cel to koniec
                 break
 
-            for v, edge in self.graph.neighbors(u):
+            for v, edge in self.graph.neighbors(u): # analizujemy sąsiadów wierzchołka
                 neighbors_checked += 1
-                new_cost = cost + edge.time
+                new_cost = cost + edge.time # koszt dojścia do sąsiada
 
-                if self.forbidden.is_blocked(prev, u, v):
+                if self.forbidden.is_blocked(prev, u, v): # jesli zakazane to nie wchodzimy tam
                     continue
 
                 if v not in dist or new_cost < dist[v]:
-                    dist[v] = new_cost
-                    prev[v] = (u, edge)
+                    dist[v] = new_cost # koszt dojscia do wierzcholka
+                    prev[v] = (u, edge) # poprzednicy i krawedz do nich
                     pq.append((new_cost, v))
 
-        if end_id not in dist:
+        if end_id not in dist: # jesli nie dotarlismy do celu
             return None
 
-        total_len, verts, edges = get_path(end_id, prev)
+        total_len, verts, edges = get_path(end_id, prev) # odtworzenie sciezki
 
         return dist[end_id], total_len, verts, edges, neighbors_checked, len(visited)
 
@@ -54,7 +54,7 @@ class Algorithm:
 
     def solve_a_star(self, start_id, end_id):
         pq = Priority(lambda x: x[0])
-        pq.append((self.heuristic(start_id, end_id), start_id))
+        pq.append((self.heuristic(start_id, end_id), start_id)) # tu sortowanie po szacowanym czasie
         
         visited = set()
         cost = {start_id: 0}
@@ -62,7 +62,7 @@ class Algorithm:
         neighbors_checked = 0
 
         while len(pq) > 0:
-            f_u, u = pq.smallest()
+            f_u, u = pq.smallest() # bierzemy wierzcholek o najniższym szacowanym koszcie + koszt
 
             if u in visited:
                 continue

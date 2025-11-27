@@ -63,3 +63,16 @@ def format_time(minutes):
     parts.append(f"{seconds} s")
 
     return " ".join(parts)
+
+    
+def orient_sequence(edge1, edge2):
+    """Zwraca listę [first, mid, last], lub None jeśli krawędzie nie są połączone."""
+    (u1, v1) = edge1
+    (u2, v2) = edge2
+    common = {u1, v1} & {u2, v2}
+    if not common:
+        return None
+    mid = common.pop()
+    first = u1 if v1 == mid else v1
+    last = u2 if v2 == mid else v2
+    return [first, mid, last]
