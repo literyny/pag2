@@ -43,7 +43,6 @@ def format_time(minutes):
     parts.append(f"{seconds} s")
 
     return " ".join(parts)
-
     
 def orient_sequence(edge1, edge2):
     (u1, v1) = edge1
